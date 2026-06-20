@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.6
+// @version      3.7
 // @description  Force any language on AFKLM websites
 // @author       madchucky
 // @match        *://*.airfrance.*/*
 // @match        *://airfrance.*/*
-// @match        *://wwws.airfrance.fr/*
+// @match        *://wwws.airfrance.*/*
 // @match        *://*.klm.*/*
 // @match        *://klm.*/*
 // @match        *://*.transavia.*/*
