@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      2.1
-// @description  Force a specific language on all AFKLM websites (Air France, KLM, Transavia, Flying Blue, etc.)
+// @version      3.0
+// @description  Force any language on AFKLM websites by letting the user input a language code (e.g., en-US, fr-FR, de-DE, ja-JP, etc.)
 // @author       madchucky
 // @match        *://*.airfrance.*/*
 // @match        *://*.klm.*/*
@@ -15,6 +15,7 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_prompt
 // ==/UserScript==
 
 (function() {
@@ -24,16 +25,31 @@
     // Default language to force (can be changed via Tampermonkey menu)
     const DEFAULT_LANGUAGE = 'en-US,en;q=0.9';
 
-    // --- 1. Allow user to change the language via Tampermonkey menu ---
-    // Add a menu command to change the language
-    GM_registerMenuCommand('Set Language to English', () => setLanguage('en-US,en;q=0.9'));
-    GM_registerMenuCommand('Set Language to French', () => setLanguage('fr-FR,fr;q=0.9'));
-    GM_registerMenuCommand('Set Language to German', () => setLanguage('de-DE,de;q=0.9'));
-    GM_registerMenuCommand('Set Language to Spanish', () => setLanguage('es-ES,es;q=0.9'));
-    GM_registerMenuCommand('Set Language to Dutch', () => setLanguage('nl-NL,nl;q=0.9'));
-
     // Load saved language or use default
     let FORCED_LANGUAGE = GM_getValue('forcedLanguage', DEFAULT_LANGUAGE);
+
+    // --- 1. Allow user to input any language code via Tampermonkey menu ---
+    // Function to prompt the user for a language code
+    function promptForLanguage() {
+        const newLanguage = GM_prompt(
+            'Enter Language Code',
+            'Enter the language code (e.g., en-US, fr-FR, de-DE, ja-JP, zh-CN):',
+            FORCED_LANGUAGE.split(',')[0] // Show current primary language code
+        );
+        if (newLanguage) {
+            // Format the language code for Accept-Language header (e.g., en-US -> en-US,en;q=0.9)
+            const formattedLanguage = formatLanguageCode(newLanguage);
+            setLanguage(formattedLanguage);
+        }
+    }
+
+    // Function to format the language code for Accept-Language header
+    function formatLanguageCode(languageCode) {
+        // Extract the primary language code (e.g., en-US -> en)
+        const primaryLang = languageCode.split('-')[0].toLowerCase();
+        // Format as "languageCode,primaryLang;q=0.9" (e.g., en-US,en;q=0.9)
+        return `${languageCode},${primaryLang};q=0.9`;
+    }
 
     // Function to update the forced language
     function setLanguage(language) {
@@ -41,6 +57,9 @@
         GM_setValue('forcedLanguage', language);
         alert(`Language set to: ${language.split(',')[0]}`);
     }
+
+    // Register menu command to prompt for language
+    GM_registerMenuCommand('Set Custom Language', promptForLanguage);
 
     // --- 2. Override the global fetch function to force Accept-Language header for AFKLM domains ---
     // This ensures that all HTTP requests to AFKLM domains include the Accept-Language header set to the user's choice.

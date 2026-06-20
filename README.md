@@ -1,13 +1,13 @@
 # AFKLM Force Language
 
-A Tampermonkey userscript to force a specific language on all AFKLM group websites (Air France, KLM, Transavia, Flying Blue, etc.).
+A Tampermonkey userscript to force **any language** on all AFKLM group websites (Air France, KLM, Transavia, Flying Blue, etc.). The user can input any language code (e.g., `en-US`, `fr-FR`, `de-DE`, `ja-JP`, `zh-CN`, etc.) to override the default language.
 
 ## Features
 
-- Forces `Accept-Language` header to the user's chosen language for all requests to AFKLM domains.
+- Forces the `Accept-Language` header to the user's chosen language for all requests to AFKLM domains.
 - Redirects any language path (e.g., `/fr/`, `/de/`, `/es/`) to the chosen language path (e.g., `/en/`).
 - Removes all language-related cookies (e.g., `lang`, `language`, `locale`, `country`).
-- Allows the user to **change the language dynamically** via the Tampermonkey menu.
+- Allows the user to **input any language code** via a prompt.
 - Works on all AFKLM domains:
   - Air France (`airfrance.fr`, `airfrance.com`, etc.)
   - KLM (`klm.com`, `klm.nl`, etc.)
@@ -27,16 +27,12 @@ A Tampermonkey userscript to force a specific language on all AFKLM group websit
    - Delete the default content and paste the content of [`afklm-force-language.user.js`](afklm-force-language.user.js).
    - Save the script (`Ctrl+S` or `Cmd+S`).
 
-3. **Change the Language (Optional)**:
+3. **Set Your Language**:
    - Click the Tampermonkey icon in your browser.
    - Select the script "AFKLM Force Language".
-   - Choose your preferred language from the menu:
-     - Set Language to English
-     - Set Language to French
-     - Set Language to German
-     - Set Language to Spanish
-     - Set Language to Dutch
-   - The script will automatically update and apply the new language.
+   - Choose "Set Custom Language".
+   - Enter your desired language code (e.g., `en-US`, `fr-FR`, `de-DE`, `ja-JP`, `zh-CN`).
+   - The script will automatically apply the new language.
 
 ## How It Works
 
@@ -46,17 +42,35 @@ A Tampermonkey userscript to force a specific language on all AFKLM group websit
 
 3. **Cookie Cleanup**: The script removes all cookies related to language preferences (e.g., `lang`, `language`, `locale`, `country`).
 
-4. **User Configuration**: The script uses Tampermonkey's `GM_setValue` and `GM_getValue` to save the user's language preference.
+4. **User Input**: The script uses Tampermonkey's `GM_prompt` to let the user input any language code. The code is then formatted for the `Accept-Language` header (e.g., `en-US` becomes `en-US,en;q=0.9`).
+
+## Examples of Language Codes
+
+Here are some common language codes you can use:
+
+| Language       | Code       |
+|----------------|------------|
+| English        | `en-US`    |
+| French         | `fr-FR`    |
+| German         | `de-DE`    |
+| Spanish        | `es-ES`    |
+| Dutch          | `nl-NL`    |
+| Italian        | `it-IT`    |
+| Japanese       | `ja-JP`    |
+| Chinese        | `zh-CN`    |
+| Korean         | `ko-KR`    |
+| Portuguese     | `pt-PT`    |
+| Russian        | `ru-RU`    |
+| Arabic         | `ar-SA`    |
 
 ## Testing
 
 | Input URL | Forced Language | Expected Result |
 |-----------|------------------|-----------------|
-| `airfrance.fr/fr/accueil` | English | Redirects to `airfrance.fr/en/accueil` |
-| `klm.com/de/angebote` | French | Redirects to `klm.com/fr/angebote` |
-| `transavia.nl/nl/vluchten` | Spanish | Redirects to `transavia.nl/es/vluchten` |
-| `flyingblue.com/it/offerte` | German | Redirects to `flyingblue.com/de/offerte` |
-| `airfrance.fr/en/home` | Dutch | No redirection (already matches forced language) |
+| `airfrance.fr/fr/accueil` | `en-US` | Redirects to `airfrance.fr/en/accueil` |
+| `klm.com/de/angebote` | `fr-FR` | Redirects to `klm.com/fr/angebote` |
+| `transavia.nl/nl/vluchten` | `ja-JP` | Redirects to `transavia.nl/ja/vluchten` |
+| `flyingblue.com/it/offerte` | `zh-CN` | Redirects to `flyingblue.com/zh/offerte` |
 
 ## Default Language
 
