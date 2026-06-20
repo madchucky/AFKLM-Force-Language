@@ -1,24 +1,25 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.5
+// @version      3.6
 // @description  Force any language on AFKLM websites
 // @author       madchucky
 // @match        *://*.airfrance.*/*
-// @match        *://*.klm.*/*
-// @match        *://*.transavia.*/*
-// @match        *://*.flyingblue.*/*
-// @match        *://*.afklm.*/*
-// @match        *://*.hop.*/*
-// @match        *://*.joon.*/*
-// @match        *://*.servair.*/*
 // @match        *://airfrance.*/*
+// @match        *://wwws.airfrance.fr/*
+// @match        *://*.klm.*/*
 // @match        *://klm.*/*
+// @match        *://*.transavia.*/*
 // @match        *://transavia.*/*
+// @match        *://*.flyingblue.*/*
 // @match        *://flyingblue.*/*
+// @match        *://*.afklm.*/*
 // @match        *://afklm.*/*
+// @match        *://*.hop.*/*
 // @match        *://hop.*/*
+// @match        *://*.joon.*/*
 // @match        *://joon.*/*
+// @match        *://*.servair.*/*
 // @match        *://servair.*/*
 // @grant        GM_setValue
 // @grant        GM_getValue
