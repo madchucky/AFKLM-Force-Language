@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.1
+// @version      3.2
 // @description  Force any language on AFKLM websites by letting the user input a language code (e.g., en-US, fr-FR, de-DE, ja-JP, etc.)
 // @author       madchucky
 // @match        *://*.airfrance.*/*
@@ -99,20 +99,24 @@
         originalXHROpen.apply(this, arguments);
     };
 
-    // --- 4. Redirect any language path to the forced language ---
-    // This checks the current URL and redirects if a language code is detected in the path.
+    // --- 4. Redirect to the forced language path ---
+    // This checks the current URL and redirects if a language code is missing or incorrect.
     if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
-        // Split the pathname into parts (e.g., ["", "fr", "accueil"] for "/fr/accueil")
         const pathParts = window.location.pathname.split('/');
-        // Check if the first part of the path is a 2-letter language code (ISO 639-1)
-        if (pathParts.length > 1) {
-            const firstPathPart = pathParts[1];
-            // Extract the language code from FORCED_LANGUAGE (e.g., 'en' from 'en-US,en;q=0.9')
-            const forcedLangCode = FORCED_LANGUAGE.split(',')[0].split('-')[0].toLowerCase();
-            // Redirect if the first part is a 2-letter code and not the forced language
-            if (/^[a-z]{2}$/i.test(firstPathPart) && firstPathPart !== forcedLangCode) {
-                window.location.pathname = window.location.pathname.replace(`/${firstPathPart}/`, `/${forcedLangCode}/`);
-            }
+        const forcedLangCode = FORCED_LANGUAGE.split(',')[0].split('-')[0].toLowerCase();
+
+        // Check if the path already contains a language code (e.g., /fr/, /en/)
+        const hasLanguagePath = pathParts.length > 1 && /^[a-z]{2}$/i.test(pathParts[1]);
+
+        // If no language code is present in the path, redirect to /forcedLangCode/
+        if (!hasLanguagePath) {
+            // Remove leading slash if present
+            const cleanPath = window.location.pathname.replace(/^\//, '');
+            window.location.pathname = `/${forcedLangCode}/${cleanPath}`;
+        }
+        // If a language code is present but not the forced one, redirect to the forced language
+        else if (pathParts[1] !== forcedLangCode) {
+            window.location.pathname = window.location.pathname.replace(`/${pathParts[1]}/`, `/${forcedLangCode}/`);
         }
 
         // --- 5. Remove all language-related cookies ---
