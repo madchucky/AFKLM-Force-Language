@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.0
+// @version      3.1
 // @description  Force any language on AFKLM websites by letting the user input a language code (e.g., en-US, fr-FR, de-DE, ja-JP, etc.)
 // @author       madchucky
 // @match        *://*.airfrance.*/*
@@ -12,6 +12,14 @@
 // @match        *://*.hop.*/*
 // @match        *://*.joon.*/*
 // @match        *://*.servair.*/*
+// @match        *://airfrance.*/*
+// @match        *://klm.*/*
+// @match        *://transavia.*/*
+// @match        *://flyingblue.*/*
+// @match        *://afklm.*/*
+// @match        *://hop.*/*
+// @match        *://joon.*/*
+// @match        *://servair.*/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
@@ -65,7 +73,7 @@
     // This ensures that all HTTP requests to AFKLM domains include the Accept-Language header set to the user's choice.
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
-        // Check if the request URL matches any AFKLM domain
+        // Check if the request URL matches any AFKLM domain (including all subdomains like wwws.airfrance.fr)
         if (typeof resource === 'string' && /(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(resource)) {
             // Create a new Headers object from the existing headers (or empty if none)
             const headers = new Headers(init?.headers || {});
@@ -82,7 +90,7 @@
     // This ensures that older AJAX requests (using XMLHttpRequest) also include the Accept-Language header.
     const originalXHROpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url) {
-        // Check if the request URL matches any AFKLM domain
+        // Check if the request URL matches any AFKLM domain (including all subdomains)
         if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(url)) {
             // Force Accept-Language to the user's chosen language
             this.setRequestHeader('Accept-Language', FORCED_LANGUAGE);
