@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.4
+// @version      3.5
 // @description  Force any language on AFKLM websites
 // @author       madchucky
 // @match        *://*.airfrance.*/*
@@ -23,7 +23,6 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
-// @grant        GM_prompt
 // @grant        GM_notification
 // ==/UserScript==
 
@@ -54,7 +53,7 @@
 
     // --- 2. Allow user to input any language code ---
     function promptForLanguage() {
-        const newLanguage = GM_prompt(
+        const newLanguage = prompt(
             'Enter Language Code',
             'Enter the language code (e.g., en-US, fr-FR, de-DE, ja-JP, zh-CN):',
             FORCED_LANGUAGE.split(',')[0]
