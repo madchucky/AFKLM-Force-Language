@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         AFKLM Force Language
 // @namespace    http://tampermonkey.net/
-// @version      3.3
-// @description  Force any language on AFKLM websites by letting the user input a language code (e.g., en-US, fr-FR, de-DE, ja-JP, etc.)
+// @version      3.4
+// @description  Force any language on AFKLM websites
 // @author       madchucky
 // @match        *://*.airfrance.*/*
 // @match        *://*.klm.*/*
@@ -20,11 +20,11 @@
 // @match        *://hop.*/*
 // @match        *://joon.*/*
 // @match        *://servair.*/*
-// @run-at       document-start
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_registerMenuCommand
 // @grant        GM_prompt
+// @grant        GM_notification
 // ==/UserScript==
 
 (function() {
@@ -34,25 +34,25 @@
     console.log("AFKLM Force Language script is running on:", window.location.hostname);
 
     // --- User Configuration ---
-    // Default language to force (can be changed via Tampermonkey menu)
     const DEFAULT_LANGUAGE = 'en-US,en;q=0.9';
-
-    // Load saved language or use default
     let FORCED_LANGUAGE = GM_getValue('forcedLanguage', DEFAULT_LANGUAGE);
 
     // --- 1. Remove language-related cookies immediately ---
-    // This ensures that any existing language preference cookies are deleted before the page loads
-    if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
-        document.cookie.split(';').forEach(cookie => {
-            const [name] = cookie.trim().split('=');
-            if (/lang|language|locale|country/i.test(name)) {
-                // Delete the cookie for all subdomains (e.g., .airfrance.fr)
-                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname.replace(/^www\d*\./, '')};`;
-            }
-        });
+    function removeLanguageCookies() {
+        if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
+            document.cookie.split(';').forEach(cookie => {
+                const [name] = cookie.trim().split('=');
+                if (/lang|language|locale|country/i.test(name)) {
+                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname.replace(/^www\d*\./, '')};`;
+                }
+            });
+        }
     }
 
-    // --- 2. Allow user to input any language code via Tampermonkey menu ---
+    // Remove cookies on script start
+    removeLanguageCookies();
+
+    // --- 2. Allow user to input any language code ---
     function promptForLanguage() {
         const newLanguage = GM_prompt(
             'Enter Language Code',
@@ -73,27 +73,40 @@
     function setLanguage(language) {
         FORCED_LANGUAGE = language;
         GM_setValue('forcedLanguage', language);
-        alert(`Language set to: ${language.split(',')[0]}`);
+        GM_notification({
+            title: 'Language Updated',
+            text: `Language set to: ${language.split(',')[0]}`,
+            timeout: 2000
+        });
+        // Re-remove cookies after language change
+        removeLanguageCookies();
+        // Force reload to apply new language
+        window.location.reload();
     }
 
     GM_registerMenuCommand('Set Custom Language', promptForLanguage);
 
     // --- 3. Force redirect to the forced language path ---
-    if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
-        const forcedLangCode = FORCED_LANGUAGE.split(',')[0].split('-')[0].toLowerCase();
-        const currentPath = window.location.pathname;
+    function checkAndRedirect() {
+        if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
+            const forcedLangCode = FORCED_LANGUAGE.split(',')[0].split('-')[0].toLowerCase();
+            const currentPath = window.location.pathname;
 
-        // If the path does not start with a language code, redirect to /forcedLangCode/
-        if (!/^\/(en|fr|de|es|nl|it|ja|zh|ko|pt|ru|ar|pl|dk|se|no|fi)\//i.test(currentPath)) {
-            window.location.href = `${window.location.origin}/${forcedLangCode}/${currentPath.replace(/^\//, '')}`;
-        }
-        // If the path starts with a different language code, redirect to the forced language
-        else if (!currentPath.startsWith(`/${forcedLangCode}/`)) {
-            window.location.href = `${window.location.origin}/${forcedLangCode}/${currentPath.replace(/^\//, '')}`;
+            // If the path does not start with a language code, redirect to /forcedLangCode/
+            if (!/^\/(en|fr|de|es|nl|it|ja|zh|ko|pt|ru|ar|pl|dk|se|no|fi)\//i.test(currentPath)) {
+                window.location.href = `${window.location.origin}/${forcedLangCode}/${currentPath.replace(/^\//, '')}`;
+            }
+            // If the path starts with a different language code, redirect to the forced language
+            else if (!currentPath.startsWith(`/${forcedLangCode}/`)) {
+                window.location.href = `${window.location.origin}/${forcedLangCode}/${currentPath.replace(/^\//, '')}`;
+            }
         }
     }
 
-    // --- 4. Override the global fetch function to force Accept-Language header for AFKLM domains ---
+    // Run redirect check
+    checkAndRedirect();
+
+    // --- 4. Override the global fetch function ---
     const originalFetch = window.fetch;
     window.fetch = async function(resource, init) {
         if (typeof resource === 'string' && /(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(resource)) {
@@ -104,7 +117,7 @@
         return originalFetch.call(this, resource, init);
     };
 
-    // --- 5. Override XMLHttpRequest to force Accept-Language header for AFKLM domains ---
+    // --- 5. Override XMLHttpRequest ---
     const originalXHROpen = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(method, url) {
         if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(url)) {
@@ -113,13 +126,6 @@
         originalXHROpen.apply(this, arguments);
     };
 
-    // --- 6. Remove language-related cookies again (in case they were set after page load) ---
-    if (/(airfrance|klm|transavia|flyingblue|afklm|hop|joon|servair)/i.test(window.location.hostname)) {
-        document.cookie.split(';').forEach(cookie => {
-            const [name] = cookie.trim().split('=');
-            if (/lang|language|locale|country/i.test(name)) {
-                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname.replace(/^www\d*\./, '')};`;
-            }
-        });
-    }
+    // --- 6. Periodically check and remove cookies ---
+    setInterval(removeLanguageCookies, 1000);
 })();
